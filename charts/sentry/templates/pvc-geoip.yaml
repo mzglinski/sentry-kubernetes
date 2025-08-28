@@ -13,7 +13,7 @@ metadata:
     "helm.sh/hook-weight": "-1"
 spec:
   accessModes:
-    - {{ .Values.filestore.filesystem.persistence.accessMode | quote }}
+    - {{ .Values.geodata.persistence.accessMode | quote }}
   resources:
     requests:
       storage: {{ .Values.geodata.persistence.size }}
