@@ -220,6 +220,7 @@ geodata:
   accountID: ""
   licenseKey: ""
   editionIDs: ""
+  annotations: {}
   persistence:
     ## If defined, storageClassName: <storageClass>
     ## If undefined (the default) or set to null, no storageClassName spec is
@@ -227,8 +228,6 @@ geodata:
     ##   GKE, AWS & OpenStack)
     # storageClass: "" # for example: csi-s3
     size: 1Gi
-    # if ReadWriteMany is not supported on your cluster, you may try using
-    # [ "ReadOnlyMany", "ReadWriteOncePod"]
     accessModes: [ "ReadWriteMany"]
     ## If 'lookupVolumeName' is set to true, Helm will attempt to retrieve
     ## the current value of 'spec.volumeName' and incorporate it into the template.
