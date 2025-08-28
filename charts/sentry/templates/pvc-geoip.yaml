@@ -13,13 +13,9 @@ metadata:
     "helm.sh/hook-weight": "-1"
 spec:
   accessModes:
-<<<<<<< HEAD
-    - {{ .Values.geodata.persistence.accessMode | quote }}
-=======
 {{- range .Values.geodata.persistence.accessModes }}
     - {{ . | quote }}
 {{- end }}
->>>>>>> feat/pvc-volume-name-lookup
   resources:
     requests:
       storage: {{ .Values.geodata.persistence.size }}
