@@ -27,7 +27,7 @@ spec:
     metadata:
       name: {{ template "sentry.fullname" . }}-db-check
       annotations:
-        {{- if .Values.sentry.worker.annotations }}
+        {{- if and .Values.sentry.worker .Values.sentry.worker.annotations }}
 {{ toYaml .Values.sentry.worker.annotations | indent 8 }}
         {{- end }}
         {{- if .Values.hooks.dbCheck.podAnnotations }}
@@ -36,7 +36,7 @@ spec:
       labels:
         app: sentry
         release: "{{ .Release.Name }}"
-        {{- if .Values.sentry.worker.podLabels }}
+        {{- if and .Values.sentry.worker .Values.sentry.worker.podLabels }}
 {{ toYaml .Values.sentry.worker.podLabels | indent 8 }}
         {{- end }}
         {{- if .Values.hooks.dbCheck.podLabels }}

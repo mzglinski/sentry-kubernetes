@@ -1,12 +1,26 @@
 # Upgrade
 
+## Upgrading to Chart 28.x.x
+
+### Storage Configuration Changes
+
+This release introduces significant changes to how Sentry handles storage for `nodestore` (raw events) and `profiling`. We strongly recommend using an external S3-compatible storage provider (e.g., AWS S3, Google Cloud Storage, MinIO) for these components to ensure performance and scalability.
+
+- **Nodestore**: You can now configure S3-based node storage via `nodestore.s3`.
+- **Profiles**: The `filestore.profiles` section now supports an S3 backend. Using the `filesystem` backend is discouraged for production environments.
+
+If you require a self-hosted S3-compatible storage solution, we recommend [SeaweedFS](https://github.com/seaweedfs/seaweedfs/tree/master/k8s/charts/seaweedfs), which can be deployed using its official Helm chart.
+
+### RabbitMQ Removed
+
+The RabbitMQ dependency has been removed in favor of a new task broker architecture. Please review the `taskBroker` and `taskWorker` sections in `values.yaml`.
+
 ## Upgrading from 13.x.x version of this Chart to 14.0.0
 
 ClickHouse was reconfigured with sharding and replication in-mind, If you are using external ClickHouse, you don't need to do anything.
 
 **WARNING**: You will lose current event data<br>
 Otherwise, you should delete the old ClickHouse volumes in-order to upgrade to this version.
-
 
 ## Upgrading from 12.x.x version of this Chart to 13.0.0
 

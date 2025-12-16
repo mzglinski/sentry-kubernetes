@@ -70,6 +70,8 @@ spec:
           securityContext:
 {{ toYaml .Values.sentry.cleanup.securityContext | indent 12 }}
       {{- end }}
+          initContainers:
+{{ include "sentry.initContainer.nodestore-s3" . | indent 10 }}
           containers:
           - name: {{ .Chart.Name }}-sentry-cleanup
             image: "{{ template "sentry.image" . }}"
@@ -89,19 +91,21 @@ spec:
             - name: C_FORCE_ROOT
               value: "true"
 {{ include "sentry.env" . | indent 12 }}
+{{ include "sentry.env.nodestore-s3" . | indent 12 }}
 {{- if .Values.sentry.cleanup.env }}
 {{ toYaml .Values.sentry.cleanup.env | indent 12 }}
 {{- end }}
-            volumeMounts:
-            - mountPath: /etc/sentry
-              name: config
-              readOnly: true
-            - mountPath: {{ .Values.filestore.filesystem.path }}
-              name: sentry-data
-            {{- if and (eq .Values.filestore.backend "gcs") .Values.filestore.gcs.secretName }}
-            - name: sentry-google-cloud-key
-              mountPath: /var/run/secrets/google
-            {{ end }}
+          volumeMounts:
+          - mountPath: /etc/sentry
+            name: config
+            readOnly: true
+{{ include "sentry.volumeMount.nodestore-s3" . | indent 10 }}
+          - mountPath: {{ .Values.filestore.filesystem.path }}
+            name: sentry-data
+          {{- if and (eq .Values.filestore.backend "gcs") .Values.filestore.gcs.secretName }}
+          - name: sentry-google-cloud-key
+            mountPath: /var/run/secrets/google
+          {{ end }}
 {{- if .Values.sentry.cleanup.volumeMounts }}
 {{ toYaml .Values.sentry.cleanup.volumeMounts | indent 12 }}
 {{- end }}
@@ -118,22 +122,23 @@ spec:
 {{ toYaml .Values.global.sidecars | indent 10 }}
 {{- end }}
           restartPolicy: Never
-          volumes:
-          - name: config
-            configMap:
-              name: {{ template "sentry.fullname" . }}-sentry
-          - name: sentry-data
-          {{- if and (eq .Values.filestore.backend "filesystem") .Values.filestore.filesystem.persistence.enabled (.Values.filestore.filesystem.persistence.persistentWorkers) }}
-          {{- if .Values.filestore.filesystem.persistence.existingClaim }}
-            persistentVolumeClaim:
-              claimName: {{ .Values.filestore.filesystem.persistence.existingClaim }}
-          {{- else }}
-            persistentVolumeClaim:
-              claimName: {{ template "sentry.fullname" . }}-data
-          {{- end }}
-          {{- else }}
-            emptyDir: {}
-          {{ end }}
+        volumes:
+        - name: config
+          configMap:
+            name: {{ template "sentry.fullname" . }}-sentry
+{{ include "sentry.volume.nodestore-s3" . | indent 8 }}
+        - name: sentry-data
+        {{- if and (eq .Values.filestore.backend "filesystem") .Values.filestore.filesystem.persistence.enabled (.Values.filestore.filesystem.persistence.persistentWorkers) }}
+        {{- if .Values.filestore.filesystem.persistence.existingClaim }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.filestore.filesystem.persistence.existingClaim }}
+        {{- else }}
+          persistentVolumeClaim:
+            claimName: {{ template "sentry.fullname" . }}-data
+        {{- end }}
+        {{- else }}
+          emptyDir: {}
+        {{ end }}
           {{- if and (eq .Values.filestore.backend "gcs") .Values.filestore.gcs.secretName }}
           - name: sentry-google-cloud-key
             secret:
