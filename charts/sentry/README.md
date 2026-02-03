@@ -1160,6 +1160,76 @@ Note: this table is incomplete, so have a look at the values.yaml in case you mi
 
 This chart routes traffic via Kubernetes Ingress only (the nginx subchart has been removed). Configure `ingress.*` (including `ingress.assets` and `ingress.static`) to mirror the previous nginx routing behavior. The defaults target nginx-ingress, but you can override annotations for other controllers.
 
+Note: if you are using nginx-ingress, please set this annotation on your ingress: `nginx.ingress.kubernetes.io/use-regex: "true"`.
+If you are using `additionalHostNames`, the `nginx.ingress.kubernetes.io/upstream-vhost` annotation might also come in handy.
+It sets the `Host` header to the value you provide to avoid CSRF issues.
+
+### Letsencrypt on NGINX Ingress Controller
+
+```yaml
+ingress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hostname: fqdn
+  ingressClassName: "nginx"
+  tls:
+    - secretName: sentry-tls
+      hosts:
+        - fqdn
+```
+
+## Gateway API (HTTPRoute)
+
+The chart also supports [Kubernetes Gateway API](https://gateway-api.sigs.k8s.io/) HTTPRoute as an alternative to traditional Ingress. When using Gateway API, disable the standard Ingress to avoid duplicate routes.
+
+```yaml
+ingress:
+  enabled: false
+route:
+  main:
+    enabled: true
+    hostnames:
+      - sentry.example.com
+    parentRefs:
+      - name: my-gateway
+        namespace: default
+```
+
+With HTTP to HTTPS redirect:
+
+```yaml
+ingress:
+  enabled: false
+route:
+  main:
+    enabled: true
+    hostnames:
+      - sentry.example.com
+    parentRefs:
+      - name: my-gateway
+        sectionName: https
+  httpRedirect:
+    enabled: true
+    parentRefs:
+      - name: my-gateway
+        sectionName: http
+```
+
+## Traefik IngressRoute
+
+If you run Traefik, you can enable the bundled `IngressRoute` resources instead of standard Ingress. When using Traefik, disable the standard Ingress to avoid duplicate routes.
+
+```yaml
+ingress:
+  enabled: false
+traefikIngressRoute:
+  enabled: true
+  hostname: sentry.example.com
+  tls:
+    secretName: sentry-tls
+```
+
 ## Sentry secret key
 
 If no `sentry.existingSecret` value is specified, for your security, the [`system.secret-key`](https://develop.sentry.dev/config/#general) is generated for you on the first installation and stored in a kubernetes secret.
