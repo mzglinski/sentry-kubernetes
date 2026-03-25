@@ -93,7 +93,7 @@ spec:
           - {{ template "sentry.fullname" $root }}-taskbroker-{{ $worker.brokerName }}.{{ $root.Release.Namespace }}.svc.{{ $root.Values.global.clusterDomain | default "cluster.local" }}
       {{- end }}
       initContainers:
-{{ include "sentry.initContainer.nodestore-s3" $root | indent 6 }}
+{{ include "sentry.initContainers.sentryImage" $root | indent 6 }}
       containers:
       - name: taskworker
         image: "{{ template "sentry.image" $root }}"

@@ -74,7 +74,7 @@ spec:
       {{- end }}
       {{- end }}
       initContainers:
-{{ include "sentry.initContainer.nodestore-s3" . | indent 6 }}
+{{ include "sentry.initContainers.sentryImage" . | indent 6 }}
       containers:
       - name: user-create-job
         image: "{{ template "sentry.image" . }}"

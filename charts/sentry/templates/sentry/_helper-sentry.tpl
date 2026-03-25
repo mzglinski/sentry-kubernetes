@@ -817,11 +817,59 @@ Init container for installing sentry-nodestore-s3 package
 {{- end -}}
 
 {{/*
+PoC only: allow librdkafka client.rack — Sentry rejects unknown keys in SUPPORTED_KAFKA_CONFIGURATION.
+Copies kafka_config.py from the image, inserts "client.rack", mounts over /usr/src/sentry/.../kafka_config.py.
+Revert when https://github.com/getsentry/sentry (or your ticket) adds client.rack to the allowlist.
+*/}}
+{{- define "sentry.initContainer.kafkaConfigPyClientRackHotfix" -}}
+- name: sentry-kafka-config-py-client-rack-hotfix
+  image: "{{ template "sentry.image" . }}"
+  imagePullPolicy: {{ default "IfNotPresent" .Values.images.sentry.pullPolicy }}
+  command:
+    - sh
+    - -c
+    - |
+      set -eu
+      if [ "${RUNNER_DEBUG:-0}" = "1" ]; then set -x; fi
+      SRC=/usr/src/sentry/src/sentry/utils/kafka_config.py
+      DST=/hotfix/kafka_config.py
+      cp "$SRC" "$DST"
+      python3 - <<'PY'
+      import pathlib
+      p = pathlib.Path("/hotfix/kafka_config.py")
+      t = p.read_text()
+      if '"client.rack"' in t:
+          raise SystemExit(0)
+      needle = '    "socket.timeout.ms",\n'
+      if needle not in t:
+          raise SystemExit("sentry kafka hotfix: needle not found in kafka_config.py")
+      p.write_text(t.replace(needle, needle + '    "client.rack",\n', 1))
+      PY
+  volumeMounts:
+    - name: sentry-kafka-config-py-hotfix
+      mountPath: /hotfix
+{{- end -}}
+
+{{/*
+All init containers that must run before Sentry main containers (nodestore install + optional kafka_config.py PoC patch).
+*/}}
+{{- define "sentry.initContainers.sentryImage" -}}
+{{ include "sentry.initContainer.nodestore-s3" . }}
+{{- if and .Values.global.kafkaClientRackAwareness.enabled (default true .Values.global.kafkaClientRackAwareness.sentryKafkaConfigPyClientRackHotfix) }}
+{{ include "sentry.initContainer.kafkaConfigPyClientRackHotfix" . }}
+{{- end }}
+{{- end -}}
+
+{{/*
 Volume definition for sentry plugins
 */}}
 {{- define "sentry.volume.nodestore-s3" -}}
 {{- if .Values.nodestore.backend }}
 - name: sentry-plugins
+  emptyDir: {}
+{{- end }}
+{{- if and .Values.global.kafkaClientRackAwareness.enabled (default true .Values.global.kafkaClientRackAwareness.sentryKafkaConfigPyClientRackHotfix) }}
+- name: sentry-kafka-config-py-hotfix
   emptyDir: {}
 {{- end }}
 {{- end -}}
@@ -833,6 +881,11 @@ Volume mount for sentry plugins
 {{- if .Values.nodestore.backend }}
 - name: sentry-plugins
   mountPath: /sentry-plugins
+{{- end }}
+{{- if and .Values.global.kafkaClientRackAwareness.enabled (default true .Values.global.kafkaClientRackAwareness.sentryKafkaConfigPyClientRackHotfix) }}
+- name: sentry-kafka-config-py-hotfix
+  mountPath: /usr/src/sentry/src/sentry/utils/kafka_config.py
+  subPath: kafka_config.py
 {{- end }}
 {{- end -}}
 

@@ -82,7 +82,7 @@ spec:
 {{ toYaml .Values.sentry.processSegments.securityContext | indent 8 }}
       {{- end }}
       initContainers:
-{{ include "sentry.initContainer.nodestore-s3" . | indent 6 }}
+{{ include "sentry.initContainers.sentryImage" . | indent 6 }}
       containers:
       - name: {{ .Chart.Name }}-process-segments
         image: "{{ template "sentry.image" . }}"

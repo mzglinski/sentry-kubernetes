@@ -27,10 +27,13 @@ global:
 When `enabled` is `true`, the chart:
 
 1. Injects **`KAFKA_CLIENT_RACK`** into pod env via the **downward API** (`valueFrom.fieldRef`), using `fieldPath` you configure.
-2. Merges **`client.rack`** into:
+2. **Sentry PoC hotfix** (on by default via `sentryKafkaConfigPyClientRackHotfix`): Sentry’s `get_kafka_cluster_options` only permits keys listed in `SUPPORTED_KAFKA_CONFIGURATION` in `sentry/utils/kafka_config.py`, which does **not** currently include `client.rack`. Until [getsentry/sentry](https://github.com/getsentry/sentry) adds it, the chart runs an **initContainer** on every workload using the Sentry image: it copies `/usr/src/sentry/src/sentry/utils/kafka_config.py` from the image into an `emptyDir`, inserts `"client.rack"` into the tuple, and the main container **mounts that file over the original path**. Set `sentryKafkaConfigPyClientRackHotfix: false` once upstream supports `client.rack`, then remove this behavior from the chart.
+3. Merges **`client.rack`** into:
    - **Sentry** — `DEFAULT_KAFKA_OPTIONS["common"]` in generated `sentry.conf.py` (only if the env var is non-empty after `strip()`).
    - **Snuba** — `BROKER_CONFIG` in generated `settings.py` (same non-empty guard).
    - **Relay** — `processing.kafka_config` as `client.rack: "${KAFKA_CLIENT_RACK}"`.
+
+The hotfix (item 2) plus `client.rack` in `sentry.conf.py` (item 3) are what make Sentry Python accept `client.rack` at runtime.
 
 **Vroom** and **uptime-checker** are **not** given this env or Kafka client rack settings; those components do not support configuring `client.rack` through this chart.
 

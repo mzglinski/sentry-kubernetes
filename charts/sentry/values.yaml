@@ -27,6 +27,9 @@ global:
     enabled: false
     envName: KAFKA_CLIENT_RACK
     fieldPath: metadata.labels['topology.kubernetes.io/zone']
+    # PoC: Sentry rejects client.rack until added to SUPPORTED_KAFKA_CONFIGURATION upstream.
+    # When true (default), an initContainer patches kafka_config.py on every Sentry-image pod.
+    sentryKafkaConfigPyClientRackHotfix: true
 
 # Profiles correspond to COMPOSE_PROFILES in the original self-hosted docker-compose.yml.
 # https://github.com/getsentry/self-hosted/blob/master/docker-compose.yml

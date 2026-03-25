@@ -71,7 +71,7 @@ spec:
 {{ toYaml .Values.sentry.cleanup.securityContext | indent 12 }}
       {{- end }}
           initContainers:
-{{ include "sentry.initContainer.nodestore-s3" . | indent 10 }}
+{{ include "sentry.initContainers.sentryImage" . | indent 10 }}
           containers:
           - name: {{ .Chart.Name }}-sentry-cleanup
             image: "{{ template "sentry.image" . }}"
