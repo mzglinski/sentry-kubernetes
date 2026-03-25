@@ -112,6 +112,7 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.externalKafka.sasl.existingSecret }}
                   key: {{ default "password" .Values.externalKafka.sasl.existingSecretKeys.password }}
+{{- include "sentry.kafka.clientRack.env" . | nindent 12 }}
           volumeMounts:
             - name: config
               mountPath: /config-template
@@ -201,6 +202,7 @@ spec:
         - name: RELAY_REDIS_URL
           value: {{ $redisProto }}://:$(HELM_CHARTS_RELAY_REDIS_PASSWORD_CONTROLLED)@{{ $redisHost }}:{{ $redisPort }}/{{ $redisDb }}
         {{- end }}
+{{- include "sentry.kafka.clientRack.env" . | nindent 8 }}
 {{- if .Values.relay.env }}
 {{ toYaml .Values.relay.env | indent 8 }}
 {{- end }}

@@ -20,6 +20,8 @@ Sentry relies heavily on Kafka. While a bundled Kafka is available, managed Kafk
 
 See `externalKafka` in `values.yaml` for configuration options.
 
+For multi-zone clusters, optional **Kafka client rack awareness** (same-AZ replica preference) is documented in [Kafka client rack awareness](kafka-rack-awareness.md).
+
 ## PostgreSQL
 
 **Status: Recommended**

@@ -587,6 +587,19 @@ Set Senty socket.timeout for Kafka
 {{- end -}}
 
 {{/*
+Kafka client rack (downward API). Wired into sentry.env, sentry.snuba.env, and Relay when global.kafkaClientRackAwareness.enabled.
+Not used for vroom or uptime-checker (no supported client.rack configuration there).
+*/}}
+{{- define "sentry.kafka.clientRack.env" -}}
+{{- if .Values.global.kafkaClientRackAwareness.enabled }}
+- name: {{ default "KAFKA_CLIENT_RACK" .Values.global.kafkaClientRackAwareness.envName }}
+  valueFrom:
+    fieldRef:
+      fieldPath: {{ default "metadata.labels['topology.kubernetes.io/zone']" .Values.global.kafkaClientRackAwareness.fieldPath | quote }}
+{{- end }}
+{{- end -}}
+
+{{/*
 Common Snuba environment variables
 */}}
 {{- define "sentry.snuba.env" -}}
@@ -673,6 +686,7 @@ Set external Clickhouse password from existingSecret
 {{- end }}
 - name: REDIS_PORT
   value:  {{ default "6379" (include "sentry.redis.port" . | quote ) -}}
+{{- include "sentry.kafka.clientRack.env" . }}
 {{- end -}}
 
 {{- define "vroom.env" -}}
@@ -1081,6 +1095,7 @@ Set openai api
       name: {{ .Values.openai.existingSecret }}
       key: {{ default "api-token" .Values.openai.existingSecretKey }}
 {{- end }}
+{{- include "sentry.kafka.clientRack.env" . }}
 {{- end -}}
 
 {{- define "sentry.autoscaling.apiVersion" -}}

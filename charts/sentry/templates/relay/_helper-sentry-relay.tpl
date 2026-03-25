@@ -92,6 +92,10 @@ config.yml: |-
       - name: security.protocol
         value: {{ $sentryKafkaSecurityProtocol | quote }}
       {{- end }}
+      {{- if .Values.global.kafkaClientRackAwareness.enabled }}
+      - name: "client.rack"
+        value: "${KAFKA_CLIENT_RACK}"
+      {{- end }}
   {{- if .Values.relay.processing.additionalKafkaConfig }}
   {{ toYaml .Values.relay.processing.additionalKafkaConfig | nindent 6 }}
   {{- end }}

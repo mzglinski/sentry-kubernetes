@@ -236,6 +236,11 @@ sentry.conf.py: |-
       {{- end }}
       }
   }
+  {{- if .Values.global.kafkaClientRackAwareness.enabled }}
+  _kafka_client_rack = os.environ.get("KAFKA_CLIENT_RACK", "").strip()
+  if _kafka_client_rack:
+      DEFAULT_KAFKA_OPTIONS["common"]["client.rack"] = _kafka_client_rack
+  {{- end }}
 
   SENTRY_EVENTSTREAM = "sentry.eventstream.kafka.KafkaEventStream"
   SENTRY_EVENTSTREAM_OPTIONS = {"producer_configuration": DEFAULT_KAFKA_OPTIONS}

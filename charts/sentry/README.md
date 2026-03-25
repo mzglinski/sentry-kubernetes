@@ -131,6 +131,9 @@ Note: this table is incomplete, so have a look at the values.yaml in case you mi
 | global.tolerations | list | `[]` |  |
 | global.volumeMounts | list | `[]` |  |
 | global.volumes | list | `[]` |  |
+| global.kafkaClientRackAwareness.enabled | bool | `false` | Enable `KAFKA_CLIENT_RACK` (downward API) and `client.rack` for Sentry, Snuba, and Relay. Requires broker-side rack config; see [docs/kafka-rack-awareness.md](docs/kafka-rack-awareness.md) |
+| global.kafkaClientRackAwareness.envName | string | `KAFKA_CLIENT_RACK` | Environment variable name for the client rack id passed to workloads |
+| global.kafkaClientRackAwareness.fieldPath | string | `metadata.labels['topology.kubernetes.io/zone']` | Kubernetes `fieldRef.fieldPath` for the downward API (must resolve to a non-empty value for rack to apply) |
 | google | object | `{}` |  |
 | hooks.activeDeadlineSeconds | int | `600` |  |
 | hooks.dbCheck.affinity | object | `{}` |  |

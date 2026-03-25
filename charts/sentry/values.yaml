@@ -17,6 +17,17 @@ global:
   volumeMounts: []
   volumes: []
 
+  # When enabled, injects KAFKA_CLIENT_RACK from the downward API and merges client.rack into
+  # Sentry, Snuba, and Relay Kafka client configs. Vroom and uptime-checker are not wired (those
+  # services do not expose configurable Kafka client rack settings). Requires broker.rack +
+  # RackAwareReplicaSelector on Kafka brokers (e.g. Strimzi). Pods must expose the zone on the
+  # fieldPath you set (often topology labels on pods or a mutating webhook); override fieldPath
+  # if your cluster differs. See docs/kafka-rack-awareness.md.
+  kafkaClientRackAwareness:
+    enabled: false
+    envName: KAFKA_CLIENT_RACK
+    fieldPath: metadata.labels['topology.kubernetes.io/zone']
+
 # Profiles correspond to COMPOSE_PROFILES in the original self-hosted docker-compose.yml.
 # https://github.com/getsentry/self-hosted/blob/master/docker-compose.yml
 # When set to errors-only, the chart only deploys components related to processing errors.

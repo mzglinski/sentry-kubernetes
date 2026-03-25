@@ -103,6 +103,12 @@ settings.py: |
   REDIS_SSL = True
   {{- end }}
 
+  {{- if .Values.global.kafkaClientRackAwareness.enabled }}
+  _kafka_client_rack = env("KAFKA_CLIENT_RACK", "").strip()
+  if _kafka_client_rack:
+      BROKER_CONFIG = {**BROKER_CONFIG, "client.rack": _kafka_client_rack}
+  {{- end }}
+
 {{- if .Values.metrics.enabled }}
   DOGSTATSD_HOST = "{{ template "sentry.fullname" . }}-metrics"
   DOGSTATSD_PORT = 9125
