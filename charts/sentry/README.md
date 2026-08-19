@@ -136,6 +136,7 @@ Note: this table is incomplete, so have a look at the values.yaml in case you mi
 | nodestore.s3.compression | bool | `nil` | Enable compression for nodestore |
 | geodata.accountID | string | `""` |  |
 | geodata.editionIDs | string | `""` |  |
+| geodata.existingSecret | string | `""` | Name of an externally-managed Secret holding the GeoIP credentials. If unset, the chart generates and manages this Secret itself. The Secret must contain the keys `GEOIPUPDATE_ACCOUNT_ID`, `GEOIPUPDATE_LICENSE_KEY` and `GEOIPUPDATE_EDITION_IDS`, which are loaded with `envFrom` and therefore cannot be renamed. If set, `accountID`, `licenseKey` and `editionIDs` above are ignored and the chart-managed Secret is not created. |
 | geodata.licenseKey | string | `""` |  |
 | geodata.mountPath | string | `""` |  |
 | geodata.path | string | `""` |  |
@@ -1511,6 +1512,27 @@ geodata:
   # path to the geoip database inside the volumemount
   path: "/usr/share/GeoIP/GeoLite2-City.mmdb"
 ```
+
+If you would rather not put the MaxMind credentials in your values file, create the Secret yourself and reference it with `geodata.existingSecret`:
+
+```yaml
+geodata:
+  existingSecret: my-geoip-secret
+  volumeName: geoip
+  mountPath: /usr/share/GeoIP
+  path: /usr/share/GeoIP/GeoLite2-City.mmdb
+```
+
+The Secret is consumed with `envFrom`, so it must use these exact keys:
+
+```yaml
+stringData:
+  GEOIPUPDATE_ACCOUNT_ID: "..."
+  GEOIPUPDATE_LICENSE_KEY: "..."
+  GEOIPUPDATE_EDITION_IDS: "..."
+```
+
+When `existingSecret` is set, `geodata.accountID`, `geodata.licenseKey` and `geodata.editionIDs` are ignored and the chart-managed Secret is not created. Because the GeoIP updater runs as a `post-install,post-upgrade` Helm hook, a Secret that is missing or has misspelled keys will fail the install or upgrade rather than degrading quietly.
 
 ## External Kafka configuration
 
